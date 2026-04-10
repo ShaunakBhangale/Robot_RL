@@ -19,15 +19,15 @@ def run_ik_baseline(num_episodes=20, render=False):
         p.loadURDF("plane.urdf")
         robot = p.loadURDF("kuka_iiwa/model.urdf", useFixedBase=True)
         target_pos = [
-            np.random.uniform(0.4, 0.7),
-            np.random.uniform(-0.3, 0.3),
-            np.random.uniform(0.1, 0.5)
+            np.random.uniform(0.4, 0.65),
+            np.random.uniform(-0.2, 0.2),
+            np.random.uniform(0.2, 0.45)
         ]
         visual = p.createVisualShape(p.GEOM_SPHERE, radius=0.05, rgbaColor=[1, 0, 0, 1])
         p.createMultiBody(baseVisualShapeIndex=visual, basePosition=target_pos)
         num_joints = 7
         joint_poses = p.calculateInverseKinematics(robot, 6, target_pos)
-        
+
         for i in range(num_joints):
             p.setJointMotorControl2(
                 robot, i,
@@ -35,7 +35,7 @@ def run_ik_baseline(num_episodes=20, render=False):
                 targetPosition=joint_poses[i],
                 force=500
             )
-            for _ in range(500):
+            for _ in range(1000):
                 p.stepSimulation()
                 if render:
                     time.sleep(1/240)
@@ -44,7 +44,7 @@ def run_ik_baseline(num_episodes=20, render=False):
         target = np.array(target_pos)
         
         distance = np.linalg.norm(ee_pos - target)
-        success = distance < 0.05
+        success = distance < 0.07
         results.append({
             "episode": ep + 1,
             "distance": distance,

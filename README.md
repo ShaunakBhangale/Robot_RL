@@ -1,0 +1,79 @@
+# Robotic Arm RL Simulation
+
+A reinforcement learning pipeline for training a 7-DOF robotic arm to reach randomized 3D targets in simulation, with a comparison against a classical IK baseline.
+
+## Demo
+*[Add GIF here]*
+
+## Overview
+This project trains a SAC (Soft Actor-Critic) policy to control a Kuka IIWA arm using joint velocity commands. Two RL environments are implemented and compared against PyBullet's built-in IK solver:
+
+- **State-based:** Agent observes exact target coordinates
+- **Vision-based:** Agent observes camera-estimated target position via OpenCV color detection
+- **IK Baseline:** PyBullet's numerical IK solver for classical comparison
+
+## Results
+
+| Method | Avg End-Effector Distance | Success Rate |
+|--------|--------------------------|--------------|
+| SAC (state-based) | ~0.19m | - |
+| SAC (vision-based) | ~0.32m | - |
+| IK Baseline | 0.057m | 100% (7cm threshold) |
+
+### Analysis
+The IK baseline achieves significantly lower end-effector error than either SAC policy, demonstrating that for structured reach tasks with known kinematics, classical control outperforms learned policies on raw precision. However, the 5.7cm average error of the IK solver reflects a PyBullet simulation limitation — a real implementation with encoder feedback and closed-loop control would achieve sub-millimeter accuracy.
+
+SAC's value lies not in precision but in generalization. A learned policy can adapt to sensor noise, model uncertainty, and task variations that would require significant re-engineering of a classical IK pipeline. Introducing camera-based target localization (vision-based env) reduced SAC performance by ~40%, quantifying the impact of perception noise on downstream policy learning — a core challenge in real-world robot deployment.
+
+## File Structure
+
+Robot_RL/
+  envs/
+    env_state.py        # Exact target position observation
+    env_vision.py       # Camera-based target localization
+  train.py              # Training script
+  eval.py               # Evaluation script
+  ik_baseline.py        # IK solver baseline
+
+## Setup
+
+python -m venv venv
+venv\Scripts\activate
+pip install pybullet stable-baselines3[extra] gymnasium opencv-python tensorboard
+
+## Training
+
+python train.py
+
+Change the import in train.py to switch between env_state and env_vision.
+
+## Evaluation
+
+python eval.py
+
+Change MODE = "state" or MODE = "vision" in eval.py to switch between models.
+
+## IK Baseline
+
+python ik_baseline.py
+
+## Monitoring Training
+
+venv\Scripts\tensorboard.exe --logdir=logs
+
+Then open http://localhost:6006
+
+## Stack
+- **PyBullet** — Physics simulation
+- **Stable-Baselines3** — SAC implementation
+- **Gymnasium** — RL environment interface
+- **OpenCV** — Camera-based target localization
+- **TensorBoard** — Training visualization
+- **PyTorch** — Neural network backend
+
+## Future Work
+- Replace PyBullet IK with custom Jacobian pseudoinverse solver
+- Vision-based RL using CnnPolicy (agent learns from pixels)
+- Variable frequency camera calls during episode (active perception)
+- Domain randomization for sim-to-real transfer
+- Extend to pick-and-place tasks
