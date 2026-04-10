@@ -69,7 +69,6 @@ Then open http://localhost:6006
 - **Gymnasium** — RL environment interface
 - **OpenCV** — Camera-based target localization
 - **TensorBoard** — Training visualization
-- **PyTorch** — Neural network backend
 
 ## Future Work
 - Replace PyBullet IK with custom Jacobian pseudoinverse solver
