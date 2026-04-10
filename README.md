@@ -3,7 +3,7 @@
 A reinforcement learning pipeline for training a 7-DOF robotic arm to reach randomized 3D targets in simulation, with a comparison against a classical IK baseline.
 
 ## Demo
-*[Add GIF here]*
+
 
 ## Overview
 This project trains a SAC (Soft Actor-Critic) policy to control a Kuka IIWA arm using joint velocity commands. Two RL environments are implemented and compared against PyBullet's built-in IK solver:
