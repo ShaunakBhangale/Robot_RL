@@ -75,11 +75,11 @@ venv\Scripts\tensorboard.exe --logdir=logs
 Then open http://localhost:6006
 
 ## Stack
-- **PyBullet** — Physics simulation
-- **Stable-Baselines3** — SAC implementation
-- **Gymnasium** — RL environment interface
-- **OpenCV** — Camera-based target localization
-- **TensorBoard** — Training visualization
+- **PyBullet** 
+- **Stable-Baselines3** 
+- **Gymnasium** 
+- **OpenCV** 
+- **TensorBoard** 
 
 ## Future Work
 - Replace PyBullet IK with custom Jacobian pseudoinverse solver
