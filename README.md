@@ -37,6 +37,11 @@ Robot_RL
 
 ## Setup
 
+```
+python
+hi
+```
+
 
 ## Training
 
