@@ -24,7 +24,7 @@ SAC's value lies not in precision but in generalization. A learned policy can ad
 
 ## File Structure
 
-​```
+​
 Robot_RL\
   envs\
     env_state.py        # Exact target position observation\
@@ -32,7 +32,7 @@ Robot_RL\
   train.py              # Training script\
   eval.py               # Evaluation script\
   ik_baseline.py        # IK solver baseline\
-​```
+​
 
 ## Setup
 
