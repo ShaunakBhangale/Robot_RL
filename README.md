@@ -27,20 +27,20 @@ SAC's value lies not in precision but in generalization. A learned policy can ad
 ```
 Robot_RL
   envs
-    env_state.py        # Exact target position observation
-    env_vision.py       # Camera-based target localization
-  train.py              # Training script
-  eval.py               # Evaluation script
-  ik_baseline.py        # IK solver baseline
+    env_state.py        
+    env_vision.py       
+  train.py              
+  eval.py               
+  ik_baseline.py        
 ```
 ​
 
 ## Setup
 
 ​```
-  python -m venv venv
-  venv\Scripts\activate
-  pip install pybullet stable-baselines3[extra] gymnasium opencv-python tensorboard
+python -m venv venv
+venv\Scripts\activate
+pip install pybullet stable-baselines3[extra] gymnasium opencv-python tensorboard
 ​```
 
 ## Training
