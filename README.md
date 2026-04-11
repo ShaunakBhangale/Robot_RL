@@ -15,12 +15,12 @@ This project trains a SAC (Soft Actor-Critic) policy to control a Kuka IIWA arm 
 |--------|--------------------------|------------------------------|
 | SAC (state-based) | ~0.19m | TODO |
 | SAC (vision-based) | ~0.32m | TODO |
-| IK Baseline | 0.057m | 100% |
+| IK Baseline | 0.0001m | 100% |
 
 ### Analysis
-The IK baseline achieves significantly lower end-effector error than either SAC policy, demonstrating that for structured reach tasks with known kinematics, classical control outperforms learned policies on raw precision. However, the 5.7cm error reflects a limitation of the solver itself — PyBullet uses a basic damped least-squares Jacobian method, which trades precision for numerical stability. A more sophisticated solver (or closed-loop control on real hardware with encoder feedback) would achieve sub-centimeter accuracy.
+The IK baseline achieves significantly lower end-effector error than either SAC policy, demonstrating that for structured reach tasks with known kinematics, classical control outperforms learned policies on raw precision. 
 
-SAC's value lies not in precision but in generalization. A learned policy can adapt to sensor noise, model uncertainty, and task variations that would require significant re-engineering of a classical IK pipeline. Introducing camera-based target localization (vision-based env) reduced SAC performance by ~40%, quantifying the impact of perception noise on policy learning — a core challenge when moving from privileged state information to realistic sensor-based observations.
+SAC's value lies not in precision but in generalization. A learned policy can adapt to sensor noise, model uncertainty, and task variations that would require significant re-engineering of a classical IK pipeline. Introducing camera-based target localization (vision-based env) reduced SAC performance by ~40%, quantifying the impact of perception noise on policy learning.
 
 ## File Structure
 
