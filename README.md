@@ -37,11 +37,7 @@ Robot_RL
 
 ## Setup
 
-​```
-python -m venv venv
-venv\Scripts\activate
-pip install pybullet stable-baselines3[extra] gymnasium opencv-python tensorboard
-​```
+
 ## Training
 
 ​```
