@@ -36,7 +36,6 @@ Robot_RL
 ​
 
 ## Setup
-
 ​```
 python -m venv venv
 venv\Scripts\activate
