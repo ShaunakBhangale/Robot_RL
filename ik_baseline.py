@@ -26,25 +26,31 @@ def run_ik_baseline(num_episodes=20, render=False):
         visual = p.createVisualShape(p.GEOM_SPHERE, radius=0.05, rgbaColor=[1, 0, 0, 1])
         p.createMultiBody(baseVisualShapeIndex=visual, basePosition=target_pos)
         num_joints = 7
-        joint_poses = p.calculateInverseKinematics(robot, 6, target_pos)
+        joint_poses = p.calculateInverseKinematics(
+            robot, 6, target_pos,
+            maxNumIterations=100,
+            residualThreshold=1e-4
+        )
 
         for i in range(num_joints):
             p.setJointMotorControl2(
                 robot, i,
                 controlMode=p.POSITION_CONTROL,
                 targetPosition=joint_poses[i],
-                force=500
-            )
-            for _ in range(1000):
-                p.stepSimulation()
-                if render:
-                    time.sleep(1/240)
+                force=500)
+
+        for _ in range(1000):
+            p.stepSimulation()
+            if render:
+                time.sleep(1/240)
+
+        # Use link frame position [4], not CoM position [0]
         ee_state = p.getLinkState(robot, 6)
-        ee_pos = np.array(ee_state[0])
+        ee_pos = np.array(ee_state[4])
         target = np.array(target_pos)
         
         distance = np.linalg.norm(ee_pos - target)
-        success = distance < 0.07
+        success = distance < 0.05
         results.append({
             "episode": ep + 1,
             "distance": distance,
