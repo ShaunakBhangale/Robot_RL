@@ -25,8 +25,8 @@ SAC's value lies not in precision but in generalization. A learned policy can ad
 ## File Structure
 
 ```
-Robot_RL/
-  envs/
+Robot_RL
+  envs
     env_state.py        # Exact target position observation
     env_vision.py       # Camera-based target localization
   train.py              # Training script
