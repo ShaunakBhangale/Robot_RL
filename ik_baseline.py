@@ -38,13 +38,12 @@ def run_ik_baseline(num_episodes=20, render=False):
                 controlMode=p.POSITION_CONTROL,
                 targetPosition=joint_poses[i],
                 force=500)
-
+ 
         for _ in range(1000):
             p.stepSimulation()
             if render:
                 time.sleep(1/240)
 
-        # Use link frame position [4], not CoM position [0]
         ee_state = p.getLinkState(robot, 6)
         ee_pos = np.array(ee_state[4])
         target = np.array(target_pos)
