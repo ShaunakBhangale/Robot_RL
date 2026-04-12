@@ -20,7 +20,7 @@ This project trains a SAC (Soft Actor-Critic) policy to control a Kuka IIWA arm 
 ### Analysis
 The IK baseline achieves significantly lower end-effector error than either SAC policy, demonstrating that for structured reach tasks with known kinematics, classical control outperforms learned policies on raw precision. 
 
-SAC's value lies not in precision but in generalization. A learned policy can adapt to sensor noise, model uncertainty, and task variations that would require significant re-engineering of a classical IK pipeline. Introducing camera-based target localization (vision-based env) reduced SAC performance by ~40%, quantifying the impact of perception noise on policy learning.
+SAC's value do not lie in precision but in generalization. A learned policy can adapt to sensor noise, model uncertainty, and task variations that would require a significant amount of re-engineering of a classical IK pipeline. Introducing camera-based target localization (vision-based env) reduced SAC performance by ~40%, quantifying the impact of perception noise on policy learning.
 
 ## File Structure
 
