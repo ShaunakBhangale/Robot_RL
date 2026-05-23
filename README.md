@@ -56,10 +56,73 @@ This project trains a SAC (Soft Actor-Critic) policy to control a Kuka IIWA arm 
 - +5.0 if distance < 0.02m (precision bonus)
 
 ## File Structure
-Robot_RL/
-├── envs/
-│   ├── env_state.py      # State-based Gymnasium env
-│   └── env_vision.py     # Vision-based Gymnasium env with depth back-projection
-├── train.py              # SAC training with argparse
-├── eval.py               # Policy evaluation with GUI rendering
-└── ik_baseline.py        # Classical IK comparison baseline
+
+    Robot_RL/
+    ├── envs/
+    │   ├── env_state.py      # State-based Gymnasium env
+    │   └── env_vision.py     # Vision-based Gymnasium env with depth back-projection
+    ├── train.py              # SAC training with argparse
+    ├── eval.py               # Policy evaluation with GUI rendering
+    └── ik_baseline.py        # Classical IK comparison baseline
+
+## Setup
+
+    python -m venv venv
+    venv\Scripts\activate
+    pip install pybullet stable-baselines3[extra] gymnasium opencv-python tensorboard
+
+## Training
+
+    # Train state-based policy
+    python train.py --mode state
+
+    # Train vision-based policy
+    python train.py --mode vision
+
+    # Custom timesteps or save name
+    python train.py --mode state --timesteps 1000000 --save my_model
+
+## Evaluation
+
+    # Evaluate state policy (opens GUI)
+    python eval.py --mode state
+
+    # Evaluate vision policy
+    python eval.py --mode vision
+
+    # Custom model and episodes
+    python eval.py --mode vision --model kuka_reach_sac_vision_obs_fixed --episodes 20
+
+## IK Baseline
+
+    python ik_baseline.py
+
+## Monitoring Training
+
+    venv\Scripts\tensorboard.exe --logdir=logs
+
+Then open http://localhost:6006
+
+## Stack
+
+- PyBullet — physics simulation and rendering
+- Stable-Baselines3 — SAC implementation
+- Gymnasium — RL environment interface
+- OpenCV — HSV thresholding, contour detection, image moments
+- NumPy — matrix math for depth back-projection
+- TensorBoard — training visualization
+
+## Known Limitations
+
+- Kuka IIWA (7-DOF) used as stand-in for a custom 6-DOF arm — policy does not transfer directly to real hardware
+- Depth-buffer back-projection is sim-only; real deployment requires ArUco markers + solvePnP
+- Single-seed results; multiple seeds with mean ± std would be more statistically rigorous
+- Velocity control capped at ±1 rad/s; real Kuka operates at higher velocities
+
+## Future Work
+
+- Deploy on real 6-DOF arm with ROS2, MoveIt2, and ArUco-based perception
+- End-to-end pixel-to-action learning with CnnPolicy
+- Domain randomization for sim-to-real transfer
+- Extend to pick-and-place and contact-rich tasks
+- IK baseline with custom Jacobian pseudoinverse solver
