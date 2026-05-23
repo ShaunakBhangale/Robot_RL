@@ -1,21 +1,30 @@
+import argparse
 from envs.env_state import KukaReachEnv as StateEnv
 from envs.env_vision import KukaReachEnvVision as VisionEnv
 from stable_baselines3 import SAC
 import time
 
-MODE = "state"
+parser = argparse.ArgumentParser(description="Evaluate trained SAC policy on Kuka reach task")
+parser.add_argument("--mode", choices=["state", "vision"], default="state", help="Environment mode: state or vision")
+parser.add_argument("--model", type=str, default=None, help="Model path to load (optional, uses default if not provided)")
+parser.add_argument("--episodes", type=int, default=5, help="Number of evaluation episodes")
 
-if MODE == "state":
+args = parser.parse_args()
+
+if args.mode == "state":
     env = StateEnv(render=True)
-    model = SAC.load("kuka_reach_sac_state")
+    model_path = args.model or "kuka_reach_sac_state"
 else:
     env = VisionEnv(render=True)
-    model = SAC.load("kuka_reach_sac_vision")
+    model_path = args.model or "kuka_reach_sac_vision_obs_fixed"
 
-obs, _ = env.reset()
+model = SAC.load(model_path)
+print(f"Loaded model: {model_path}")
+print(f"Mode: {args.mode}")
+
 total_rewards = []
 
-for ep in range(5):
+for ep in range(args.episodes):
     obs, _ = env.reset()
     done = False
     total_reward = 0

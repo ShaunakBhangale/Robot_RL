@@ -3,7 +3,7 @@ import pybullet_data
 import numpy as np
 import time
 
-def run_ik_baseline(num_episodes=20, render=False):
+def run_ik_baseline(num_episodes=100, render=False):
     if render:
         client = p.connect(p.GUI)
     else:
@@ -28,7 +28,7 @@ def run_ik_baseline(num_episodes=20, render=False):
         num_joints = 7
         joint_poses = p.calculateInverseKinematics(
             robot, 6, target_pos,
-            maxNumIterations=100,
+            maxNumIterations=100, 
             residualThreshold=1e-4
         )
 
@@ -45,7 +45,7 @@ def run_ik_baseline(num_episodes=20, render=False):
                 time.sleep(1/240)
 
         ee_state = p.getLinkState(robot, 6)
-        ee_pos = np.array(ee_state[4])
+        ee_pos = np.array(ee_state[4]) 
         target = np.array(target_pos)
         
         distance = np.linalg.norm(ee_pos - target)
@@ -69,4 +69,4 @@ def run_ik_baseline(num_episodes=20, render=False):
     return avg_distance, success_rate
 
 if __name__ == "__main__":
-    run_ik_baseline(num_episodes=20, render=False)
+    run_ik_baseline(num_episodes=100, render=False)
