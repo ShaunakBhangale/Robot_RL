@@ -21,16 +21,6 @@ This project trains a SAC (Soft Actor-Critic) policy to control a Kuka IIWA arm 
 | SAC vision v2 (fixed perception) | 0.050m | 99% |
 | IK baseline (100 iterations, tuned) | ~0.0001m | 100% |
 
-### Key Findings
-
-**Observation space matters more than expected.** Adding joint velocities and an explicit error vector (target minus ee_pos) to the observation restores the Markov property for this second-order system. This improved state SAC from ~0.19m to 0.049m and pushed success rate to 100%.
-
-**Vision and state performance are now equivalent.** After fixing the 2D-to-3D mapping to use proper depth-buffer back-projection (mean perception error ~1.25cm), the vision-based policy achieves 99% success and 5.0cm mean error — statistically indistinguishable from the state-based policy. Perception error is no longer the bottleneck.
-
-**IK dominates on this task.** The properly tuned IK baseline achieves sub-millimeter accuracy. For clean reach tasks with known kinematics, classical control outperforms learned policies. RL's value is in tasks IK cannot formulate cleanly — contact-rich manipulation, noisy perception, novel objects.
-
-## Architecture
-
 ### Observation Space (20D)
 
 - Joint angles q1..q7 (rad)
