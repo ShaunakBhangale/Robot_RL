@@ -3,87 +3,63 @@
 A reinforcement learning pipeline for training a 7-DOF robotic arm to reach randomized 3D targets in simulation, with a comparison against a classical IK baseline.
 
 ## Overview
+
 This project trains a SAC (Soft Actor-Critic) policy to control a Kuka IIWA arm using joint velocity commands. Two RL environments are implemented and compared against PyBullet's built-in IK solver:
 
-- **State-based:** Agent observes exact target coordinates
-- **Vision-based:** Agent observes camera-estimated target position via OpenCV color detection
+- **State-based:** Agent observes joint angles, joint velocities, error vector, and ground-truth target coordinates
+- **Vision-based:** Agent observes joint angles, joint velocities, error vector, and camera-estimated target position via OpenCV color detection + depth-buffer back-projection
 - **IK Baseline:** PyBullet's numerical IK solver for classical comparison
 
 ## Results
 
-| Method | Avg End-Effector Distance | Success Rate (7cm threshold) |
-|--------|--------------------------|------------------------------|
-| SAC (state-based) | ~0.19m | TODO |
-| SAC (vision-based) | ~0.32m | TODO |
-| IK Baseline | 0.0001m | 100% |
+| Method | Mean Error | Success Rate (5cm threshold) |
+|--------|-----------|------------------------------|
+| SAC state v1 (10D obs, no velocities) | ~0.19m | low |
+| SAC vision v1 (broken 2D→3D mapping) | ~0.32m | low |
+| IK baseline (default 20 iterations) | ~0.042m | 85% |
+| SAC state v2 (20D obs) | 0.049m | 100% |
+| SAC vision v2 (fixed perception) | 0.050m | 99% |
+| IK baseline (100 iterations, tuned) | ~0.0001m | 100% |
 
-### Analysis
-The IK baseline achieves significantly lower end-effector error than either SAC policy, demonstrating that for structured reach tasks with known kinematics, classical control outperforms learned policies on raw precision. 
+### Key Findings
 
-SAC's value do not lie in precision but in generalization. A learned policy can adapt to sensor noise, model uncertainty, and task variations that would require a significant amount of re-engineering of a classical IK pipeline. Introducing camera-based target localization (vision-based env) reduced SAC performance by ~40%, quantifying the impact of perception noise on policy learning.
+**Observation space matters more than expected.** Adding joint velocities and an explicit error vector (target minus ee_pos) to the observation restores the Markov property for this second-order system. This improved state SAC from ~0.19m to 0.049m and pushed success rate to 100%.
+
+**Vision and state performance are now equivalent.** After fixing the 2D-to-3D mapping to use proper depth-buffer back-projection (mean perception error ~1.25cm), the vision-based policy achieves 99% success and 5.0cm mean error — statistically indistinguishable from the state-based policy. Perception error is no longer the bottleneck.
+
+**IK dominates on this task.** The properly tuned IK baseline achieves sub-millimeter accuracy. For clean reach tasks with known kinematics, classical control outperforms learned policies. RL's value is in tasks IK cannot formulate cleanly — contact-rich manipulation, noisy perception, novel objects.
+
+## Architecture
+
+### Observation Space (20D)
+
+- Joint angles q1..q7 (rad)
+- Joint velocities dq1..dq7 (rad/s)
+- Error vector ex, ey, ez = target minus ee_pos (m)
+- Target position tx, ty, tz (m)
+
+### Vision Pipeline
+
+1. Render 320x240 RGB + depth from fixed external camera (eye-to-hand setup)
+2. HSV thresholding + contour detection to find red target centroid (cx, cy)
+3. Look up depth at (cx, cy) from PyBullet depth buffer
+4. Back-project pixel + depth to world coordinates via inv(projection x view) matrix
+
+### Action Space
+
+7D continuous velocity commands in [-1, 1] rad/s, one per joint.
+
+### Reward
+
+- reward = -distance - 0.01 * norm(action)
+- +10.0 if distance < 0.05m (success bonus)
+- +5.0 if distance < 0.02m (precision bonus)
 
 ## File Structure
-
-```
-Robot_RL
-  envs
-    env_state.py        
-    env_vision.py       
-  train.py              
-  eval.py               
-  ik_baseline.py        
-```
-​
-
-## Setup
-
-```
-python -m venv venv
-venv\Scripts\activate
-pip install pybullet stable-baselines3[extra] gymnasium opencv-python tensorboard
-```
-
-
-## Training
-
-​```
-python train.py
-​```
-
-Change the import in `train.py` to switch between `env_state` and `env_vision`.
-
-## Evaluation
-
-​```
-python eval.py
-​```
-
-Change `MODE = "state"` or `MODE = "vision"` in `eval.py` to switch between models.
-
-## IK Baseline
-
-​```
-python ik_baseline.py
-​```
-
-## Monitoring Training
-
-​```
-venv\Scripts\tensorboard.exe --logdir=logs
-​```
-
-Then open http://localhost:6006
-
-## Stack
-- **PyBullet** 
-- **Stable-Baselines3** 
-- **Gymnasium** 
-- **OpenCV** 
-- **TensorBoard** 
-
-## Future Work
-- Replace PyBullet IK with custom Jacobian pseudoinverse solver
-- Vision-based RL using CnnPolicy (agent learns from pixels)
-- Variable frequency camera calls during episode (active perception)
-- Domain randomization for sim-to-real transfer
-- Extend to pick-and-place tasks
+Robot_RL/
+├── envs/
+│   ├── env_state.py      # State-based Gymnasium env
+│   └── env_vision.py     # Vision-based Gymnasium env with depth back-projection
+├── train.py              # SAC training with argparse
+├── eval.py               # Policy evaluation with GUI rendering
+└── ik_baseline.py        # Classical IK comparison baseline
