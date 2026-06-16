@@ -3,87 +3,116 @@
 A reinforcement learning pipeline for training a 7-DOF robotic arm to reach randomized 3D targets in simulation, with a comparison against a classical IK baseline.
 
 ## Overview
+
 This project trains a SAC (Soft Actor-Critic) policy to control a Kuka IIWA arm using joint velocity commands. Two RL environments are implemented and compared against PyBullet's built-in IK solver:
 
-- **State-based:** Agent observes exact target coordinates
-- **Vision-based:** Agent observes camera-estimated target position via OpenCV color detection
+- **State-based:** Agent observes joint angles, joint velocities, error vector, and ground-truth target coordinates
+- **Vision-based:** Agent observes joint angles, joint velocities, error vector, and camera-estimated target position via OpenCV color detection + depth-buffer back-projection
 - **IK Baseline:** PyBullet's numerical IK solver for classical comparison
 
 ## Results
 
-| Method | Avg End-Effector Distance | Success Rate (7cm threshold) |
-|--------|--------------------------|------------------------------|
-| SAC (state-based) | ~0.19m | TODO |
-| SAC (vision-based) | ~0.32m | TODO |
-| IK Baseline | 0.0001m | 100% |
+| Method | Mean Error | Success Rate (5cm threshold) |
+|--------|-----------|------------------------------|
+| SAC state v1 (10D obs, no velocities) | ~0.19m | low |
+| SAC vision v1 (broken 2D→3D mapping) | ~0.32m | low |
+| IK baseline (default 20 iterations) | ~0.042m | 85% |
+| SAC state v2 (20D obs) | 0.049m | 100% |
+| SAC vision v2 (fixed perception) | 0.050m | 99% |
+| IK baseline (100 iterations, tuned) | ~0.0001m | 100% |
 
-### Analysis
-The IK baseline achieves significantly lower end-effector error than either SAC policy, demonstrating that for structured reach tasks with known kinematics, classical control outperforms learned policies on raw precision. 
+### Observation Space (20D)
 
-SAC's value do not lie in precision but in generalization. A learned policy can adapt to sensor noise, model uncertainty, and task variations that would require a significant amount of re-engineering of a classical IK pipeline. Introducing camera-based target localization (vision-based env) reduced SAC performance by ~40%, quantifying the impact of perception noise on policy learning.
+- Joint angles q1..q7 (rad)
+- Joint velocities dq1..dq7 (rad/s)
+- Error vector ex, ey, ez = target minus ee_pos (m)
+- Target position tx, ty, tz (m)
+
+### Vision Pipeline
+
+1. Render 320x240 RGB + depth from fixed external camera (eye-to-hand setup)
+2. HSV thresholding + contour detection to find red target centroid (cx, cy)
+3. Look up depth at (cx, cy) from PyBullet depth buffer
+4. Back-project pixel + depth to world coordinates via inv(projection x view) matrix
+
+### Action Space
+
+7D continuous velocity commands in [-1, 1] rad/s, one per joint.
+
+### Reward
+
+- reward = -distance - 0.01 * norm(action)
+- +10.0 if distance < 0.05m (success bonus)
+- +5.0 if distance < 0.02m (precision bonus)
 
 ## File Structure
 
-```
-Robot_RL
-  envs
-    env_state.py        
-    env_vision.py       
-  train.py              
-  eval.py               
-  ik_baseline.py        
-```
-​
+    Robot_RL/
+    ├── envs/
+    │   ├── env_state.py      # State-based Gymnasium env
+    │   └── env_vision.py     # Vision-based Gymnasium env with depth back-projection
+    ├── train.py              # SAC training with argparse
+    ├── eval.py               # Policy evaluation with GUI rendering
+    └── ik_baseline.py        # Classical IK comparison baseline
 
 ## Setup
 
-```
-python -m venv venv
-venv\Scripts\activate
-pip install pybullet stable-baselines3[extra] gymnasium opencv-python tensorboard
-```
-
+    python -m venv venv
+    venv\Scripts\activate
+    pip install pybullet stable-baselines3[extra] gymnasium opencv-python tensorboard
 
 ## Training
 
-​```
-python train.py
-​```
+    # Train state-based policy
+    python train.py --mode state
 
-Change the import in `train.py` to switch between `env_state` and `env_vision`.
+    # Train vision-based policy
+    python train.py --mode vision
+
+    # Custom timesteps or save name
+    python train.py --mode state --timesteps 1000000 --save my_model
 
 ## Evaluation
 
-​```
-python eval.py
-​```
+    # Evaluate state policy (opens GUI)
+    python eval.py --mode state
 
-Change `MODE = "state"` or `MODE = "vision"` in `eval.py` to switch between models.
+    # Evaluate vision policy
+    python eval.py --mode vision
+
+    # Custom model and episodes
+    python eval.py --mode vision --model kuka_reach_sac_vision_obs_fixed --episodes 20
 
 ## IK Baseline
 
-​```
-python ik_baseline.py
-​```
+    python ik_baseline.py
 
 ## Monitoring Training
 
-​```
-venv\Scripts\tensorboard.exe --logdir=logs
-​```
+    venv\Scripts\tensorboard.exe --logdir=logs
 
 Then open http://localhost:6006
 
 ## Stack
-- **PyBullet** 
-- **Stable-Baselines3** 
-- **Gymnasium** 
-- **OpenCV** 
-- **TensorBoard** 
+
+- PyBullet — physics simulation and rendering
+- Stable-Baselines3 — SAC implementation
+- Gymnasium — RL environment interface
+- OpenCV — HSV thresholding, contour detection, image moments
+- NumPy — matrix math for depth back-projection
+- TensorBoard — training visualization
+
+## Known Limitations
+
+- Kuka IIWA (7-DOF) used as stand-in for a custom 6-DOF arm — policy does not transfer directly to real hardware
+- Depth-buffer back-projection is sim-only; real deployment requires ArUco markers + solvePnP
+- Single-seed results; multiple seeds with mean ± std would be more statistically rigorous
+- Velocity control capped at ±1 rad/s; real Kuka operates at higher velocities
 
 ## Future Work
-- Replace PyBullet IK with custom Jacobian pseudoinverse solver
-- Vision-based RL using CnnPolicy (agent learns from pixels)
-- Variable frequency camera calls during episode (active perception)
+
+- Deploy on real 6-DOF arm with ROS2, MoveIt2, and ArUco-based perception
+- End-to-end pixel-to-action learning with CnnPolicy
 - Domain randomization for sim-to-real transfer
-- Extend to pick-and-place tasks
+- Extend to pick-and-place and contact-rich tasks
+- IK baseline with custom Jacobian pseudoinverse solver
