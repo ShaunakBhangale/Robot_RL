@@ -60,7 +60,7 @@ class KukaReachEnvVision(gym.Env):
         #essentially M_int but goes from camera corods to clip space not straight to pixels
 
         _, _, rgb, depth, _ = p.getCameraImage(width, height, view_matrix, projection_matrix)
-
+    
         #Convert RGB for OpenCV
         frame = np.array(rgb, dtype=np.uint8).reshape(height, width, 4)
         frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGBA2BGR)

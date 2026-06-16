@@ -14,7 +14,7 @@ if args.mode == "state":
     from envs.env_state import KukaReachEnv
     env = KukaReachEnv(render=False)
     save_name = args.save or "kuka_reach_sac_state"
-
+    
 else:
     from envs.env_vision import KukaReachEnvVision as KukaReachEnv
     env = KukaReachEnv(render=False)
